@@ -1,0 +1,33 @@
+name: Verify
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Run offline Alpha acceptance
+        run: npm run verify:offline
+
+      - name: Check JavaScript syntax
+        run: |
+          for file in server.mjs lib/*.mjs scripts/*.mjs tests/*.mjs tests/fixtures/*.mjs public/*.js; do
+            node --check "$file"
+          done
+
+      - name: Validate OpenAPI YAML
+        run: ruby -e "require 'yaml'; YAML.load_file('openapi.yaml'); puts 'OpenAPI YAML parsed'"

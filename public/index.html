@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="AI HOT - 可验证、可订阅、可供 Agent 调用的 AI 新闻流。" />
+    <title>AI HOT - AI 新闻站</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#app">跳到主要内容</a>
+    <div class="shell">
+      <aside class="sidebar">
+        <a class="brand" href="#/briefs" aria-label="AI HOT 首页"><span>AI</span><strong>HOT</strong></a>
+        <p class="brand-caption">可信 AI 动态流</p>
+        <nav aria-label="主导航">
+          <a href="#/briefs" data-route="briefs">今日简报</a>
+          <a href="#/reading" data-route="reading">稍后读</a>
+          <a href="#/daily" data-route="daily">日报</a>
+          <a href="#/weekly" data-route="weekly">回顾</a>
+          <a href="#/all" data-route="all">全部文章</a>
+          <a href="#/agent" data-route="agent">Agent 接入</a>
+          <a href="#/admin" data-route="admin">管理后台</a>
+          <button class="more-trigger" type="button" aria-expanded="false" aria-controls="mobile-more">更多</button>
+        </nav>
+        <div class="sidebar-rule"></div>
+        <a class="quiet-link" href="#/sources">信源透明</a>
+        <a class="quiet-link" href="#/monitors" data-route="monitors">主题监控</a>
+        <a class="quiet-link" href="#/library" data-route="library">资料库</a>
+        <a class="quiet-link" href="#/feedback">反馈与信源提报</a>
+        <footer>AI HOT · 0.9</footer>
+        <div id="mobile-more" class="mobile-more" hidden>
+          <a href="#/weekly">回顾</a>
+          <a href="#/all">全部文章</a>
+          <a href="#/monitors">主题监控</a>
+          <a href="#/agent">Agent 接入</a>
+          <a href="#/admin">管理后台</a>
+          <a href="#/sources">信源透明</a>
+          <a href="#/library">资料库</a>
+          <a href="#/feedback">反馈与信源提报</a>
+        </div>
+      </aside>
+      <main id="app" class="app" tabindex="-1"></main>
+    </div>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,5 @@
+(node:94432) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+Current database saved to <candidate>/.alpha-runs/run-Zk5Cgj/app/data/backups/ai-news-pre-restore-2026-10-08T00-06-00-000Z.sqlite
+Restored ai-news-2026-10-08T00-06-00-000Z.sqlite to <candidate>/.alpha-runs/run-Zk5Cgj/app/data/ai-news.sqlite
+Start the local service again after this command completes.

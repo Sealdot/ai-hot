@@ -1,0 +1,54 @@
+(node:94391) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ canonicalizeUrl removes tracking data and fragments (0.793833ms)
+✔ parseFeed reads RSS and Atom-style link content (1.017583ms)
+✔ itemFeed emits RSS that can be parsed back into items (1.440833ms)
+✔ cleanText decodes common HTML entities from feed content (0.106834ms)
+✔ OPML import normalizes feeds, skips duplicates, and produces stable IDs (0.811709ms)
+✔ generateDailyIssue freezes same-day items only once (15.67325ms)
+✔ generateDailyIssue records degraded source health (0.229375ms)
+✔ generateDailyIssue supports a prior-24-hour freeze window (0.849583ms)
+✔ dateInShanghai is stable ISO date (0.18925ms)
+✔ enrichItems reports configuration requirements without a provider (0.6075ms)
+✔ reviewItem records an editor decision and can reject an item (0.284166ms)
+✔ curateItems collapses duplicate reports and caps routine releases (0.80825ms)
+✔ release feeds recognize product-prefixed package versions as routine (0.212708ms)
+✔ groupEditorialEvents exposes similar reports outside the selected feed (0.120917ms)
+✔ curateItems applies the Hugging Face daily cap in Shanghai time (0.375625ms)
+✔ calculateBackoffMinutes grows exponentially and caps at three hours (0.134292ms)
+✔ extractArticleText prefers JSON-LD articleBody (0.360875ms)
+✔ ingestSource sends conditional headers and handles 304 (0.529708ms)
+✔ ingestSource propagates a feed timeout without mutating stored items (1356.034292ms)
+✔ ingestSource classifies rate limits and preserves Retry-After (0.342917ms)
+✔ GitHub release connector uses compact JSON and preserves source metadata (1.0145ms)
+✔ valid sources may report an empty update window without becoming failures (0.131125ms)
+✔ built-in source catalog exceeds 100 active sources and preserves local toggles (0.4265ms)
+✔ multi-source tags distinguish research, policy, and community signals (0.134209ms)
+✔ source health tolerates one failure and uses explicit degraded and failed boundaries (0.17775ms)
+✔ feed concurrency caps global work at four and each host at one (11.802333ms)
+✔ no-model enrichment marks old pending work skipped and keeps recent candidates explicit (0.201667ms)
+✔ story briefs conservatively merge a 72-hour event and trace claims to sources (1.590333ms)
+✔ story briefs accept cross-day updates, reject stale matches, and never merge routine versions (0.402667ms)
+✔ OpenAI Responses enrichment uses strict schema and auto-selects confident items (0.881208ms)
+✔ OpenAI Responses enrichment retries malformed output three times then records failure (0.351791ms)
+✔ OpenAI Responses enrichment retries rate limits and then succeeds (0.335792ms)
+✔ approved human review prevents automatic overwrite (0.095542ms)
+✔ SQLite migration is idempotent and preserves legacy JSON (12.311667ms)
+✔ SQLite reader state persists read, saved, hidden and notes locally (9.167667ms)
+✔ SQLite reader feedback replaces a prior choice and aggregates local preferences (12.838042ms)
+✔ SQLite library snapshots safely merge reader data and keep recoverable backups (12.086125ms)
+✔ SQLite brief state migrates saved items, requires all sources read, and persists monitors (8.297958ms)
+✔ SQLite maintenance retains recent records and compacts old backups (8.582959ms)
+(node:94392) ExperimentalWarning: SQLite is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ restore rejects corrupted backup before changing the database (49.377917ms)
+✔ restore rejects a symlink backup before changing the database (37.749375ms)
+✔ restore rejects a SQLite file belonging to another application (48.674208ms)
+ℹ tests 42
+ℹ suites 0
+ℹ pass 42
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1522.220333

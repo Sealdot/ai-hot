@@ -1,0 +1,50 @@
+{
+  "status": "passed",
+  "fixedTime": "2026-10-08T00:06:00.000Z",
+  "node": "v24.14.0",
+  "checks": [
+    "network guard self-test + clean credential environment + 138 disabled catalog entries",
+    "unit tests under network guard and fixed time",
+    "first boot empty SQLite + local 0600 token + scheduler enabled without external collection",
+    "Web assets + OpenAPI/Skill + admin authorization + cross-origin writes",
+    "local OPML -> Feed ingestion -> ETag 304 -> 3 source-traceable fallback briefs",
+    "explicit read/save/note/hide/unhide + article saved state + workspace + weekly review",
+    "monitor inclusion/exclusion changes priority",
+    "fixed-date daily issue + all four parseable nonempty RSS endpoints",
+    "restart persists briefs + article/brief reader state + monitors + daily snapshot",
+    "SQLite backup -> mutate -> stop -> CLI restore -> restart recovers notes and monitors + CLI backup"
+  ],
+  "fixtureHits": 2,
+  "schedulerEnabled": true,
+  "externalNetworkAttempts": 0,
+  "credentialsInherited": [],
+  "sourceFiles": [
+    "server.mjs",
+    "package.json",
+    "openapi.yaml",
+    "agent/SKILL.md",
+    "lib/content.mjs",
+    "lib/store.mjs",
+    "lib/briefs.mjs",
+    "lib/concurrency.mjs",
+    "lib/health.mjs",
+    "lib/opml.mjs",
+    "lib/source-catalog.mjs",
+    "public/index.html",
+    "public/app.js",
+    "public/app.css",
+    "scripts/backup.mjs",
+    "scripts/restore.mjs",
+    "scripts/generate-daily.mjs",
+    "tests/content.test.mjs",
+    "tests/restore.test.mjs",
+    "tests/fixtures/offline-guard.mjs",
+    "data/sources.json",
+    "data/editorial-overrides.json"
+  ],
+  "limitations": [
+    "Application process network guard, not OS air-gap",
+    "Random UUIDs, ephemeral ports and SQLite bytes are not bit-identical",
+    "Source config and admin token are outside SQLite backup"
+  ]
+}

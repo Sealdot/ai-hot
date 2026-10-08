@@ -1,0 +1,451 @@
+openapi: 3.1.0
+info:
+  title: AI HOT API
+  version: 0.9.0
+  description: 本地优先的 AI 事件简报、原始文章、日报、RSS 与阅读管理 API。结论保留原始 URL 与来源依据。
+servers:
+  - url: http://127.0.0.1:8788
+paths:
+  /api/health:
+    get:
+      summary: 数据库、采集、AI 队列和日报健康状态
+      responses:
+        '200': { description: 健康状态 }
+  /api/public/briefs:
+    get:
+      summary: 获取近 7 天事件简报
+      description: 默认只返回达到精选门槛的简报；排序依次考虑本地监控、重要度与新进展。
+      parameters:
+        - { name: scope, in: query, schema: { type: string, enum: [selected, all], default: selected } }
+        - { name: topic, in: query, schema: { type: string } }
+        - { name: source, in: query, schema: { type: string } }
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: reader, in: query, schema: { type: string, enum: [all, unread, saved, hidden], default: all } }
+        - { name: lens, in: query, schema: { type: string, enum: [all, verified, primary, community], default: all }, description: 智能推荐、多源印证、一手发布或社区与博主视角 }
+        - { name: take, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 12 } }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: 简报列表、活跃未读数和分页游标
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  briefs: { type: array, items: { $ref: '#/components/schemas/Brief' } }
+                  nextCursor: { type: [string, 'null'] }
+                  meta: { type: object }
+  /api/public/briefs/workspace:
+    get:
+      summary: 获取简报级稍后读工作台
+      responses:
+        '200': { description: 近 7 天活跃未读、稍后读和笔记 }
+  /api/public/briefs/weekly:
+    get:
+      summary: 获取事件级七天回顾
+      responses:
+        '200': { description: 看完、稍后读、笔记、持续更新和下周待处理 }
+  /api/public/briefs/{id}:
+    get:
+      summary: 获取一个可追溯事件简报
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: 简报、结论来源、来源时间线与本地阅读状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { brief: { $ref: '#/components/schemas/Brief' } }
+        '404': { description: 简报不存在 }
+  /api/public/items:
+    get:
+      summary: 获取精选或全部新闻流
+      parameters:
+        - { name: mode, in: query, schema: { type: string, enum: [selected, all], default: selected } }
+        - { name: category, in: query, schema: { type: string, enum: [ai-models, ai-products, industry, paper, tip] } }
+        - { name: sourceKind, in: query, schema: { type: string, enum: [first-party, news, social] } }
+        - { name: source, in: query, schema: { type: string }, description: 具体信源 ID，与 sourceKind 可组合使用 }
+        - { name: since, in: query, schema: { type: string, format: date-time } }
+        - { name: take, in: query, schema: { type: integer, minimum: 1, maximum: 50, default: 20 } }
+        - { name: cursor, in: query, schema: { type: string } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: reader, in: query, schema: { type: string, enum: [all, unread, saved, hidden], default: all }, description: 本机阅读状态筛选；默认不返回已隐藏内容 }
+      responses:
+        '200': { description: 新闻列表和分页游标 }
+  /api/public/reader/workspace:
+    get:
+      summary: 获取本机阅读工作台
+      description: 返回近 72 小时未读精选、收藏、笔记、阅读统计和已启用偏好数量；不需要账号。
+      responses:
+        '200': { description: 本机阅读工作台内容 }
+  /api/public/reader/weekly:
+    get:
+      summary: 获取最近 7 天阅读复盘
+      description: 返回最近 7 天的已读、收藏、笔记、未读积压，以及按编辑优先级和本机偏好排序的待读内容。
+      responses:
+        '200': { description: 本机每周复盘内容 }
+  /api/public/items/{id}:
+    get:
+      summary: 获取单条新闻及本机阅读状态
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: 新闻详情、来源原文与本机阅读状态 }
+        '404': { description: 新闻不存在 }
+  /api/reader/state:
+    post:
+      summary: 更新本机阅读状态
+      description: 仅允许同源请求；状态保存在本机 SQLite，不需要账号或管理令牌。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, action]
+              properties:
+                id: { type: string }
+                action: { type: string, enum: [read, unread, save, unsave, hide, unhide, note] }
+                note: { type: string, maxLength: 2000 }
+      responses:
+        '200': { description: 更新后的本机阅读状态 }
+        '400': { description: 参数无效 }
+        '404': { description: 新闻不存在 }
+  /api/reader/brief-state:
+    post:
+      summary: 更新本机简报阅读状态
+      description: 仅允许同源请求；打开简报不会自动标记已读。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, action]
+              properties:
+                id: { type: string }
+                action: { type: string, enum: [read, unread, save, unsave, hide, unhide, note] }
+                note: { type: string, maxLength: 2000 }
+      responses:
+        '200': { description: 更新后的简报阅读状态 }
+        '400': { description: 参数无效 }
+        '404': { description: 简报不存在 }
+  /api/reader/feedback:
+    post:
+      summary: 更新本机主题或信源偏好
+      description: 仅允许同源请求；反馈保存在本机 SQLite，并轻量影响精选与待读排序。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, action]
+              properties:
+                id: { type: string }
+                action: { type: string, enum: [prefer-category, avoid-category, prefer-source, avoid-source, clear] }
+      responses:
+        '200': { description: 更新后的文章反馈和聚合偏好 }
+        '400': { description: 参数无效 }
+        '404': { description: 新闻不存在 }
+  /api/local/library:
+    get:
+      summary: 获取本机资料库摘要
+      description: 仅供同源本机界面使用；返回收藏、笔记、偏好和 SQLite 备份清单。
+      responses:
+        '200': { description: 本机资料库摘要 }
+  /api/local/library/export:
+    get:
+      summary: 导出本机阅读资料
+      description: JSON 可安全合并导入；Markdown 适合归档。该接口不发送跨域许可头。
+      parameters:
+        - { name: format, in: query, required: true, schema: { type: string, enum: [json, markdown] } }
+      responses:
+        '200': { description: 导出的 JSON 或 Markdown 文件 }
+        '400': { description: 导出格式无效 }
+  /api/local/library/import:
+    post:
+      summary: 安全合并导入本机资料
+      description: 仅接收版本 1 的本机 JSON 快照。写入前自动创建 SQLite 备份，不覆盖更晚的本机状态，不写入未知文章。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [snapshot]
+              properties:
+                snapshot: { type: object }
+      responses:
+        '200': { description: 导入结果、自动备份和更新后的资料库 }
+        '400': { description: 导入快照无效 }
+  /api/local/library/backup:
+    post:
+      summary: 创建本机 SQLite 备份
+      description: 使用当前配置的备份留存策略；仅允许同源本机请求。
+      responses:
+        '201': { description: 新备份和备份清单 }
+  /api/local/preferences/clear:
+    post:
+      summary: 撤销一个聚合阅读偏好
+      description: 清除该主题或信源目标对应的全部本机反馈记录。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [dimension, target]
+              properties:
+                dimension: { type: string, enum: [category, source] }
+                target: { type: string }
+      responses:
+        '200': { description: 已清除的反馈和剩余偏好 }
+        '400': { description: 偏好参数无效 }
+  /api/local/monitors:
+    get:
+      summary: 列出本地主题监控器
+      responses:
+        '200': { description: 监控器列表 }
+    post:
+      summary: 创建本地主题监控器
+      description: 支持实体、关键词、分类、信源的包含与排除规则。
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonitorInput' }
+      responses:
+        '201': { description: 已创建监控器 }
+        '400': { description: 规则无效 }
+  /api/local/monitors/{id}:
+    patch:
+      summary: 更新或启停主题监控器
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MonitorInput' }
+      responses:
+        '200': { description: 已更新 }
+        '404': { description: 监控器不存在 }
+    delete:
+      summary: 删除本地主题监控器
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: 已删除 }
+        '404': { description: 监控器不存在 }
+  /api/local/sources/opml:
+    post:
+      summary: 导入 OPML RSS 信源
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [opml]
+              properties: { opml: { type: string } }
+      responses:
+        '201': { description: 导入数和新信源 }
+        '400': { description: OPML 无效或没有新信源 }
+  /api/local/sources/{id}:
+    patch:
+      summary: 启用或停用单个信源
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [enabled]
+              properties: { enabled: { type: boolean } }
+      responses:
+        '200': { description: 更新后信源 }
+  /api/local/sources/{id}/retry:
+    post:
+      summary: 立即重试单个信源
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { description: 单信源抓取结果 }
+        '409': { description: 已有抓取任务运行中 }
+  /api/public/daily:
+    get:
+      summary: 获取日报归档
+      responses:
+        '200': { description: 日报列表 }
+  /api/public/daily/{date}:
+    get:
+      summary: 获取指定日期的冻结日报
+      parameters:
+        - { name: date, in: path, required: true, schema: { type: string, format: date } }
+      responses:
+        '200': { description: 日报详情 }
+        '404': { description: 日报不存在 }
+  /api/public/sources:
+    get:
+      summary: 获取信源配置和持久化健康状态
+      responses:
+        '200': { description: 信源列表 }
+  /api/admin/overview:
+    get:
+      summary: 获取管理后台概览
+      security: [{ adminToken: [] }]
+      responses:
+        '200': { description: 信源、队列、用量、日报和任务状态 }
+        '401': { description: 未授权 }
+  /api/admin/items:
+    get:
+      summary: 获取 AI 或人工审核队列
+      security: [{ adminToken: [] }]
+      parameters:
+        - { name: state, in: query, schema: { type: string, enum: [pending, failed, review], default: pending } }
+        - { name: take, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 30 } }
+      responses:
+        '200': { description: 队列项目 }
+  /api/admin/ingest:
+    post:
+      summary: 刷新全部信源或指定信源
+      security: [{ adminToken: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { sourceId: { type: string } }
+      responses:
+        '200': { description: 采集结果 }
+        '409': { description: 已有采集任务运行中 }
+  /api/admin/enrich:
+    post:
+      summary: 执行已配置的可选 AI 编辑，或重试指定新闻
+      security: [{ adminToken: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                take: { type: integer, minimum: 1, maximum: 30, default: 30 }
+                force: { type: boolean, default: false }
+                itemId: { type: string }
+      responses:
+        '200': { description: 处理数、精选数、待审核数、失败数和 Token 用量 }
+        '409': { description: 已有 AI 任务运行中 }
+  /api/admin/review:
+    post:
+      summary: 批准、修订或拒绝一条新闻
+      security: [{ adminToken: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string }
+                category: { type: string, enum: [ai-models, ai-products, industry, paper, tip] }
+                summary: { type: string }
+                whyItMatters: { type: string }
+                tags: { type: array, items: { type: string } }
+                importance: { type: integer, minimum: 1, maximum: 99 }
+                selected: { type: boolean }
+                status: { type: string, enum: [approved, rejected, unreviewed] }
+                note: { type: string }
+      responses:
+        '200': { description: 更新后的新闻 }
+  /api/admin/daily:
+    post:
+      summary: 生成或重建指定日期日报
+      security: [{ adminToken: [] }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date: { type: string, format: date }
+                force: { type: boolean, default: false }
+      responses:
+        '201': { description: 日报生成结果 }
+components:
+  schemas:
+    BriefClaim:
+      type: object
+      required: [text, sourceItemIds, kind]
+      properties:
+        text: { type: string }
+        sourceItemIds: { type: array, items: { type: string } }
+        kind: { type: string, enum: [fact, analysis] }
+    BriefSource:
+      type: object
+      required: [itemId, sourceId, sourceName, title, url, publishedAt]
+      properties:
+        itemId: { type: string }
+        sourceId: { type: string }
+        sourceName: { type: string }
+        sourceKind: { type: string }
+        sourceChannel: { type: string, enum: [official, research, release, media, blog, newsletter, papers, community, social] }
+        sourceTier: { type: integer, minimum: 1, maximum: 3 }
+        contentType: { type: string }
+        author: { type: string }
+        title: { type: string }
+        url: { type: string, format: uri }
+        publishedAt: { type: string, format: date-time }
+        summary: { type: string }
+        note: { type: string }
+    Brief:
+      type: object
+      required: [id, headline, summaryClaims, topics, entities, firstPublishedAt, lastPublishedAt, sources, quality, reader]
+      properties:
+        id: { type: string }
+        headline: { type: string }
+        summaryClaims: { type: array, minItems: 1, maxItems: 4, items: { $ref: '#/components/schemas/BriefClaim' } }
+        whyItMatters: { oneOf: [{ $ref: '#/components/schemas/BriefClaim' }, { type: 'null' }] }
+        topics: { type: array, items: { type: string } }
+        entities: { type: array, items: { type: string } }
+        contentTypes: { type: array, items: { type: string } }
+        sourceChannels: { type: array, items: { type: string } }
+        firstPublishedAt: { type: string, format: date-time }
+        lastPublishedAt: { type: string, format: date-time }
+        importance: { type: integer, minimum: 1, maximum: 99 }
+        sources: { type: array, items: { $ref: '#/components/schemas/BriefSource' } }
+        quality: { type: object }
+        reader: { type: object }
+        ranking:
+          type: object
+          properties:
+            evidenceGrade: { type: string, enum: [A, B, C] }
+            eventScore: { type: integer, minimum: 1, maximum: 99 }
+            sourceCount: { type: integer, minimum: 1 }
+            channelCount: { type: integer, minimum: 1 }
+            primaryCount: { type: integer, minimum: 0 }
+            reasons: { type: array, items: { type: string } }
+    MonitorInput:
+      type: object
+      properties:
+        name: { type: string, maxLength: 80 }
+        include: { $ref: '#/components/schemas/MonitorRules' }
+        exclude: { $ref: '#/components/schemas/MonitorRules' }
+        priority: { type: integer, minimum: 1, maximum: 3 }
+        enabled: { type: boolean }
+    MonitorRules:
+      type: object
+      properties:
+        entities: { type: array, items: { type: string } }
+        keywords: { type: array, items: { type: string } }
+        categories: { type: array, items: { type: string } }
+        sources: { type: array, items: { type: string } }
+  securitySchemes:
+    adminToken:
+      type: http
+      scheme: bearer
+      bearerFormat: Local admin token

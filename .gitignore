@@ -1,0 +1,14 @@
+node_modules/
+.DS_Store
+.env.local
+data/items.runtime.json
+data/daily-issues.runtime.json
+data/ai-news.sqlite
+data/ai-news.sqlite-shm
+data/ai-news.sqlite-wal
+data/admin-token.runtime
+data/backups/
+data/logs/
+
+.alpha-runs/
+data/*.tmp-*
